@@ -11,9 +11,17 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
+
     public function register()
     {
-        //
+      // LINEBOT
+      $this->app->bind('line-bot', function ($app, array $parameters) {
+        return new LINEBot
+        (
+          new LINEBot\HTTPClient\CurlHTTPClient(env('LINE_ACCESS_TOKEN')),
+          ['channelSecret' => env('LINE_CHANNEL_SECRET')]
+        );
+      });
     }
 
     /**
