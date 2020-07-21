@@ -19,4 +19,5 @@ Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
 
-Route::get('/get_access', 'GettingController@gettoeken');
+//access token
+//Route::get('/get_access', 'GettingController@gettoeken');
