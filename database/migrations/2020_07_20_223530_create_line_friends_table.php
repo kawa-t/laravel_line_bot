@@ -13,10 +13,12 @@ class CreateLineFriendsTable extends Migration
      */
     public function up()
     {
-        Schema::create('line_friends', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->timestamps();
-        });
+      Schema::create('line_friends', function (Blueprint $table) {
+        $table->increments('id');
+        $table->string('line_id', 64)->unique();
+        $table->string('display_name', 64);
+        $table->timestamps();
+      });
     }
 
     /**
