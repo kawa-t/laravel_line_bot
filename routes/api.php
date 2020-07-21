@@ -20,3 +20,8 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::group(['middleware' => ['api']], function () {
   Route::get('get_access', 'GettingController@gettoeken');
 });
+
+Route::group(['namespace' => 'Api'], function() {
+  // LineからのWebhookを受信する
+  Route::post('/line/webhook', 'LineController@webhook')->name('line.webhook');
+});
