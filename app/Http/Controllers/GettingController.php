@@ -13,8 +13,8 @@ class GettingController extends Controller
 
         $data = array(
             'grant_type' => 'client_credentials',
-            'client_id' => '',
-            'client_secret' => '',
+            'client_id' => '1654467172',
+            'client_secret' => '6b9d35aa5582dddf2e4ba3e491c12fdf',
         );
         $header = array(
             "Content-Type: application/x-www-form-urlencoded",
@@ -33,6 +33,6 @@ class GettingController extends Controller
 
         //レスポンスのjsonからtokenを取得
         $access_token = json_decode($response)->access_token;
-       return response()->json(['results' => $access_token]);
+        return response()->json(['results' => $access_token]);
     }
 }
