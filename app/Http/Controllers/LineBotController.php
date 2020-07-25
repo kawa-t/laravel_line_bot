@@ -18,9 +18,10 @@ class LineBotController extends Controller
 
     public function parrot(Request $request)
     {
-//        Log::debug($request->header());
-//        Log::debug($request->input());
+//      Log::debug($request->header());
+//      Log::debug($request->input());
 
+        //認証を行う
         $lineAccessToken = config('services.line.access_token');
         $lineChannelSecret = config('services.line.channel_secret');
 
@@ -43,6 +44,8 @@ class LineBotController extends Controller
 
             $replyToken = $event->getReplyToken();
             $replyText = $event->getText();
+            //エンコード
+            $replyText = mb_convert_encoding($replyText,'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
 
             //Jsonを取得する
             $url = public_path() . '/data/double_weakness.json';
@@ -50,31 +53,74 @@ class LineBotController extends Controller
             $json = mb_convert_encoding($json, 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
             $type_array = json_decode($json, true);
 
+            //複合タイプに対応する
+            $multi_type = explode("、", $replyText);
+            $type1 =  $multi_type[0];
+
+            if(strpos($replyText, "、") !== false){
+              $type2 =  $multi_type[1];
+            }else{
+              $type2 = $replyText;
+            }
+
+
             //タイプを判定
             foreach($type_array as $key1 => $value1){
               $array_list = $value1;
-              $type_match = array_filter($array_list, function($element) use($replyText)
+
+              //タイプ１
+              $type_match1 = array_filter($array_list, function($element) use($type1)
               {
-                return $element['type'] == $replyText;
+                return $element['type'] == $type1;
               });
+              //タイプ以外の入力があった場合
+              if($type_match1 == null){
+                $a = array(
+                  array("no_much")
+                );
+              }else{
+                $a = array_column($type_match1, 'double_weakness_type');
+              }
+
+
+
+              //タイプ２
+              $type_match2 = array_filter($array_list, function($element) use($type2)
+              {
+                return $element['type'] == $type2;
+              });
+              //タイプ以外の入力があった場合
+              if($type_match2 == null){
+                $b = array(
+                  array("no_much")
+                );
+              }else{
+                $b = array_column($type_match2, 'double_weakness_type');
+              }
+
+
+
+              $type_match = array_merge($a[0],$b[0]);
+
+              //重複削除
+              $type_match = array_unique($type_match);
+              $type_match = array_values($type_match);
             };
 
-          $weak_text = "";
 
-          if($type_match == null){
+
+            $weak_text = "";
+
+          if(in_array("no_much", $type_match)){
             $weak_text = "タイプを入力してね";
           }else{
-            $results = array_column($type_match, 'double_weakness_type');
-            if(count($results[0]) === 1){
-              $weak_text = $results[0][0];
-            }else{
-              for($i = 0; $i < count($results[0]); $i++)
-              {
-                $weak_text = $results[0][$i].",".$weak_text;
-              }
+            for($i = 0; $i < count($type_match); $i++)
+            {
+              $weak_text = $type_match[$i].",".$weak_text;
             }
           }
 
+            //LINEへ送信する
             $lineBot->replyText($replyToken, $weak_text);
         }
     }
