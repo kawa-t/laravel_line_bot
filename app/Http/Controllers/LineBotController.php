@@ -18,9 +18,6 @@ class LineBotController extends Controller
 
     public function parrot(Request $request)
     {
-//      Log::debug($request->header());
-//      Log::debug($request->input());
-
         //認証を行う
         $lineAccessToken = config('services.line.access_token');
         $lineChannelSecret = config('services.line.channel_secret');
@@ -31,9 +28,11 @@ class LineBotController extends Controller
         $signature = $request->header('x-line-signature');
 
         if (!$lineBot->validateSignature($request->getContent(), $signature)) {
+            //送信元に400エラーを伝える
             abort(400, 'Invalid signature');
         }
 
+        //LINEで入力されたメッセージ情報を受け取る
         $events = $lineBot->parseEventRequest($request->getContent(), $signature);
 
         foreach ($events as $event) {
@@ -44,7 +43,7 @@ class LineBotController extends Controller
 
             $replyToken = $event->getReplyToken();
             $replyText = $event->getText();
-            //エンコード
+            //エンコードを行う
             $replyText = mb_convert_encoding($replyText,'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
 
             //Jsonを取得する
@@ -53,7 +52,7 @@ class LineBotController extends Controller
             $json = mb_convert_encoding($json, 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
             $type_array = json_decode($json, true);
 
-            //複合タイプに対応する
+            //複合タイプに対応する（区切りをつけているかで判断）
             $multi_type = explode("、", $replyText);
             $type1 =  $multi_type[0];
 
@@ -62,7 +61,6 @@ class LineBotController extends Controller
             }else{
               $type2 = $replyText;
             }
-
 
             //タイプを判定
             foreach($type_array as $key1 => $value1){
@@ -82,8 +80,6 @@ class LineBotController extends Controller
                 $a = array_column($type_match1, 'double_weakness_type');
               }
 
-
-
               //タイプ２
               $type_match2 = array_filter($array_list, function($element) use($type2)
               {
@@ -98,8 +94,6 @@ class LineBotController extends Controller
                 $b = array_column($type_match2, 'double_weakness_type');
               }
 
-
-
               $type_match = array_merge($a[0],$b[0]);
 
               //重複削除
@@ -107,18 +101,18 @@ class LineBotController extends Controller
               $type_match = array_values($type_match);
             };
 
-
-
+            //変数宣言
             $weak_text = "";
 
-          if(in_array("no_much", $type_match)){
-            $weak_text = "タイプを入力してね";
-          }else{
-            for($i = 0; $i < count($type_match); $i++)
-            {
-              $weak_text = $type_match[$i].",".$weak_text;
+            //タイプ以外の入力がされてきた場合
+            if(in_array("no_much", $type_match)){
+              $weak_text = "タイプを入力してね";
+            }else{
+              for($i = 0; $i < count($type_match); $i++)
+              {
+                $weak_text = $type_match[$i].",".$weak_text;
+              }
             }
-          }
 
             //LINEへ送信する
             $lineBot->replyText($replyToken, $weak_text);
