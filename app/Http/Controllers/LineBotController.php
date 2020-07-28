@@ -58,7 +58,7 @@ class LineBotController extends Controller
             $json = mb_convert_encoding($json, 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
             $pokemon_array = json_decode($json, true);
 
-            Log::debug($pokemon_array);
+//            Log::debug($pokemon_array);
 
             //複合タイプに対応する（区切りをつけているかで判断）
             $multi_type = explode("、", $replyText);
