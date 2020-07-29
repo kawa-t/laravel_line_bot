@@ -61,25 +61,24 @@ class LineBotController extends Controller
             Log::debug($pokemon_array);
 
             //複合タイプに対応する（区切りをつけているかで判断）
-            $multi_type = explode("、", $replyText);
-            $type1 =  $multi_type[0];
-
-            if(strpos($replyText, "、") !== false){
-              $type2 =  $multi_type[1];
-            }else{
-              $type2 = $replyText;
-            }
+            $pokemon_name = $replyText;
+//
+//            if(strpos($replyText, "、") !== false){
+//              $type2 =  $multi_type[1];
+//            }else{
+//              $type2 = $replyText;
+//            }
 
             //タイプを判定
-            foreach($type_array as $key1 => $value1){
-              $array_list = $value1;
+            foreach($pokemon_array as $key1 => $value1){
+              $pokemon_list = $value1;
 
-              //タイプ１
-              $type_match1 = array_filter($array_list, function($element) use($type1)
+              //ポケモンがいるか
+              $type_match1 = array_filter($pokemon_list, function($element) use($type1)
               {
-                return $element['type'] == $type1;
+                return $element['name'] == $type1;
               });
-              //タイプ以外の入力があった場合
+              //ポケモン以外の入力があった場合
               if($type_match1 == null){
                 $a = array(
                   array("no_much")
