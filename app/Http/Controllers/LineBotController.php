@@ -9,7 +9,7 @@ use LINE\LINEBot;
 use LINE\LINEBot\HTTPClient\CurlHTTPClient;
 use LINE\LINEBot\Event\MessageEvent\TextMessage;
 
-class LineBotController extends Controller
+class LineBotTypeController extends Controller
 {
     public function index()
     {

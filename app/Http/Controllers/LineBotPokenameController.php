@@ -9,14 +9,9 @@ use LINE\LINEBot;
 use LINE\LINEBot\HTTPClient\CurlHTTPClient;
 use LINE\LINEBot\Event\MessageEvent\TextMessage;
 
-class LineBotTypeController extends Controller
+class LineBotPokenameController extends Controller
 {
-    public function index()
-    {
-        return view('linebot.index');
-    }
-
-    public function input_type(Request $request)
+    public function input_pokemon(Request $request)
     {
         //認証を行う
         $lineAccessToken = config('services.line.access_token');
@@ -52,26 +47,27 @@ class LineBotTypeController extends Controller
             $json = mb_convert_encoding($json, 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
             $type_array = json_decode($json, true);
 
-            //複合タイプに対応する（区切りをつけているかで判断）
-            $multi_type = explode("、", $replyText);
-            $type1 =  $multi_type[0];
+            //ポケモン情報を取得
+            $url = 'https://raw.githubusercontent.com/kotofurumiya/pokemon_data/master/data/pokemon_data.json';
+            $json = file_get_contents($url);
+            $json = mb_convert_encoding($json, 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
+            $pokemon_array = json_decode($json, true);
 
-            if(strpos($replyText, "、") !== false){
-              $type2 =  $multi_type[1];
-            }else{
-              $type2 = $replyText;
-            }
+            //複合タイプに対応する（区切りをつけているかで判断）
+            $pokemon_name = $replyText;
+
+          Log::debug($replyText);
 
             //タイプを判定
-            foreach($type_array as $key1 => $value1){
-              $array_list = $value1;
+            foreach($pokemon_array as $key1 => $value1){
+              $pokemon_list = $value1;
 
-              //タイプ１
-              $type_match1 = array_filter($array_list, function($element) use($type1)
+              //ポケモンがいるか
+              $type_match1 = array_filter($pokemon_list, function($element) use($type1)
               {
-                return $element['type'] == $type1;
+                return $element['name'] == $type1;
               });
-              //タイプ以外の入力があった場合
+              //ポケモン以外の入力があった場合
               if($type_match1 == null){
                 $a = array(
                   array("no_much")
