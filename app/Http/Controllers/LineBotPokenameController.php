@@ -53,21 +53,34 @@ class LineBotPokenameController extends Controller
             $json = mb_convert_encoding($json, 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
             $pokemon_array = json_decode($json, true);
 
-            //複合タイプに対応する（区切りをつけているかで判断）
-            $pokemon_name = $replyText;
+            //入力チェック
+            if(in_array($replyText, array_column($pokemon_array, 'name'), true))
+            {
+              //該当するポケモン取得
+              $pokemon_data = $pokemon_array[array_search($replyText, array_column($pokemon_array, 'name'))];
+            }else{
+              Log::debug("いない");
+            }
 
-          Log::debug($replyText);
+            $type1 = $pokemon_data['types'][0];
+
+            if(isset($pokemon_data['types'][1])){
+              $type2 = $pokemon_data['types'][1];
+            }else{
+              //同一タイプの時は同じもののタイプを入力する
+              $type2 = $pokemon_data['types'][0];
+            }
 
             //タイプを判定
-            foreach($pokemon_array as $key1 => $value1){
-              $pokemon_list = $value1;
+            foreach($type_array as $key1 => $value1){
+              $array_list = $value1;
 
-              //ポケモンがいるか
-              $type_match1 = array_filter($pokemon_list, function($element) use($type1)
+              //タイプ１
+              $type_match1 = array_filter($array_list, function($element) use($type1)
               {
-                return $element['name'] == $type1;
+                return $element['type'] == $type1;
               });
-              //ポケモン以外の入力があった場合
+              //タイプ以外の入力があった場合
               if($type_match1 == null){
                 $a = array(
                   array("no_much")
@@ -102,7 +115,7 @@ class LineBotPokenameController extends Controller
 
             //タイプ以外の入力がされてきた場合
             if(in_array("no_much", $type_match)){
-              $weak_text = "タイプを入力してね";
+              $weak_text = "ポケモンのなまえを入力してね";
             }else{
               for($i = 0; $i < count($type_match); $i++)
               {
