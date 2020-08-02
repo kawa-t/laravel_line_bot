@@ -32,7 +32,6 @@ class LineBotPokenameController extends Controller
 
         foreach ($events as $event) {
             if (!($event instanceof TextMessage)) {
-                Log::debug('Non text message has come');
                 continue;
             }
 
@@ -56,62 +55,67 @@ class LineBotPokenameController extends Controller
             //入力チェック
             if(in_array($replyText, array_column($pokemon_array, 'name'), true))
             {
-              //該当するポケモン取得
+              //該当するポケモンがいる場合
               $pokemon_data = $pokemon_array[array_search($replyText, array_column($pokemon_array, 'name'))];
-            }else{
-              Log::debug("いない");
-            }
 
-            $type1 = $pokemon_data['types'][0];
+              //タイプを入れる
+              $type1 = $pokemon_data['types'][0];
 
-            if(isset($pokemon_data['types'][1])){
-              $type2 = $pokemon_data['types'][1];
-            }else{
-              //同一タイプの時は同じもののタイプを入力する
-              $type2 = $pokemon_data['types'][0];
-            }
-
-            //タイプを判定
-            foreach($type_array as $key1 => $value1){
-              $array_list = $value1;
-
-              //タイプ１
-              $type_match1 = array_filter($array_list, function($element) use($type1)
-              {
-                return $element['type'] == $type1;
-              });
-              //タイプ以外の入力があった場合
-              if($type_match1 == null){
-                $a = array(
-                  array("no_much")
-                );
+              //単タイプかどうか
+              if(isset($pokemon_data['types'][1])){
+                $type2 = $pokemon_data['types'][1];
               }else{
-                $a = array_column($type_match1, 'double_weakness_type');
+                $type2 = 'mono_type';
+                $sp_weak = "";
               }
 
-              //タイプ２
-              $type_match2 = array_filter($array_list, function($element) use($type2)
-              {
-                return $element['type'] == $type2;
-              });
-              //タイプ以外の入力があった場合
-              if($type_match2 == null){
-                $b = array(
-                  array("no_much")
-                );
-              }else{
-                $b = array_column($type_match2, 'double_weakness_type');
-              }
+              //タイプ判定
+              foreach($type_array as $key1 => $value1){
+                $array_list = $value1;
 
-              $type_match = array_merge($a[0],$b[0]);
+                //タイプ１
+                $type_match1 = array_filter($array_list, function($element) use($type1)
+                {
+                  //必ずある前提なので返すだけ
+                  return $element['type'] == $type1;
+                });
+                //該当するものを取得
+                $type_a = array_column($type_match1, 'double_weakness_type');
 
-              //重複削除
-              $type_match = array_unique($type_match);
-              $type_match = array_values($type_match);
-            };
+                //タイプ２
+                if ($type2 === 'mono_type'){
+                  $type_match = $type_a[0];
+                }else{
+                  $type_match2 = array_filter($array_list, function($element) use($type2)
+                  {
+                    return $element['type'] == $type2;
+                  });
+                  //該当するものを取得
+                  $type_b = array_column($type_match2, 'double_weakness_type');
+
+                  //複合弱点をマージ
+                  $type_match = array_merge($type_a[0],$type_b[0]);
+
+                  //4倍弱点
+                  $sp_weak = array_intersect($type_a[0],$type_b[0]);
+
+                  //2倍弱点
+                  $type_match = array_diff($type_match,$sp_weak);
+
+                }
+
+                //重複削除
+                $type_match = array_unique($type_match);
+                $type_match = array_values($type_match);
+              };
+            }else{
+              //ポケモン以外の入力の場合
+                $type_match = array("no_much");
+            }
 
             //変数宣言
             $weak_text = "";
+            $spweak_text = "";
 
             //タイプ以外の入力がされてきた場合
             if(in_array("no_much", $type_match)){
@@ -120,6 +124,9 @@ class LineBotPokenameController extends Controller
               for($i = 0; $i < count($type_match); $i++)
               {
                 $weak_text = $type_match[$i].",".$weak_text;
+              }
+              if($sp_weak){
+                $weak_text = $weak_text. "\n \n4倍弱点だよ \n".$sp_weak[0];
               }
             }
 
