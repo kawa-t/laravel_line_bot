@@ -13,10 +13,10 @@ class LineBotPokenameController extends Controller
 {
     public function input_pokemon(Request $request)
     {
-        //認証を行う
+        //トークンの取得
         $lineAccessToken = config('services.line.access_token');
         $lineChannelSecret = config('services.line.channel_secret');
-
+        //認証を行う
         $httpClient = new CurlHTTPClient($lineAccessToken);
         $lineBot = new LINEBot($httpClient, ['channelSecret' => $lineChannelSecret]);
 
